@@ -7,6 +7,7 @@
 - Playwright (headless) 抓取 BOSS 直聘职位，保持登录状态。
 - 调用 OpenAI 或 Claude 评估匹配度，并生成打招呼文案。
 - SQLite + SQLModel 保存岗位与评估结果。
+- 自动从你的在线简历（默认 <https://blog.242500.xyz>）获取个人项目/经验，用于 Boss 过滤与 AI 评估。
 - FastAPI API 供 n8n / GitHub Actions 调用。
 - `scripts/daily_run.py` 一键执行抓取 → 评估 → 生成 `output/daily_report.md`。
 - GitHub Actions `cron` 每天自动运行并上传日报 artifacts。
@@ -45,6 +46,7 @@ cp .env.example .env
 
 - `SEARCH_URL`：BOSS 搜索页 URL。
 - `RESUME_PROFILE`：你的简历摘要，提供给 LLM 参考。
+- `RESUME_PROFILE_URL`：可选，在线简历/作品集地址（默认指向 <https://blog.242500.xyz>，会自动抓取文本作为简历内容）。
 - `OPENAI_API_KEY` / `CLAUDE_API_KEY`：AI 服务 key，按 `MODEL_PROVIDER` 选择。
 - `MODEL_PROVIDER`：`OPENAI` 或 `ANTHROPIC`。
 - `ANTHROPIC_API_URL`：可选，Claude 代理/自建网关地址（例如 `https://anyrouter.top`）。
@@ -88,6 +90,7 @@ sqlite> SELECT title, match_score FROM job JOIN jobeval ON job.id = jobeval.job_
 - `CLAUDE_API_KEY`
 - `ANTHROPIC_API_URL`（如使用代理）
 - `RESUME_PROFILE`
+- `RESUME_PROFILE_URL`（可选，填写你的在线简历地址，例如 <https://blog.242500.xyz>）
 - `SEARCH_URL`
 
 Workflow 每天北京时间 09:00 运行，执行 `python scripts/daily_run.py` 并上传 `output/daily_report.md` 为 artifacts。
@@ -98,5 +101,7 @@ Workflow 每天北京时间 09:00 运行，执行 `python scripts/daily_run.py` 
 2. AI (OpenAI/Claude) 评估匹配度，生成打招呼话术。
 3. SQLModel 写入 `jobs` 和 `job_eval` 表。
 4. 生成 `output/daily_report.md`（Top10 推荐+关键字段+打招呼+JD 摘要）。
+
+> 提示：`RESUME_PROFILE` 为空时，流程会自动抓取 `RESUME_PROFILE_URL`（默认为 <https://blog.242500.xyz>）的网页内容作为简历来源，确保 Boss 过滤与 AI 评估都紧贴你的真实项目和经验。
 
 如需调整参数，可修改 `app/config.py` 或 `.env`。

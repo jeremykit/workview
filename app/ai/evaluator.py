@@ -12,12 +12,19 @@ from app.db.models import Job, JobEval
 
 
 def _build_prompt(job: Job, resume_profile: str) -> str:
+    resume_source = (
+        f"Portfolio URL (for additional context): {settings.resume_profile_url}\n"
+        if settings.resume_profile_url
+        else ""
+    )
     return (
         "You are a career coach helping a candidate decide if a job is a fit.\n"
         "Use the resume profile and job description to produce a JSON response.\n"
         "Required JSON keys: match_score (0-100), tech_match, experience_match, pros (list), cons (list), "
         "recommend (true/false), greeting_messages (list of 2 short greetings in Chinese).\n"
+        "Prioritize alignment with the candidate's personal projects and experience.\n"
         f"Resume Profile:\n{resume_profile}\n\n"
+        f"{resume_source}"
         f"Job Title: {job.title}\nCompany: {job.company}\nCity: {job.city}\nSalary: {job.salary}\n"
         f"Job Description:\n{job.jd_full}\n"
         "Return ONLY the JSON string."

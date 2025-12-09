@@ -29,6 +29,7 @@ jobs:
           CLAUDE_API_KEY: ${{ secrets.CLAUDE_API_KEY }}
           ANTHROPIC_API_URL: ${{ secrets.ANTHROPIC_API_URL }}
           RESUME_PROFILE: ${{ secrets.RESUME_PROFILE }}
+          RESUME_PROFILE_URL: ${{ secrets.RESUME_PROFILE_URL }}
           SEARCH_URL: ${{ secrets.SEARCH_URL }}
         run: |
           python scripts/daily_run.py

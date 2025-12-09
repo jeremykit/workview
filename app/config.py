@@ -4,6 +4,7 @@ from enum import Enum
 from pathlib import Path
 from typing import Optional
 
+import httpx
 from pydantic import BaseSettings, Field
 
 
@@ -18,6 +19,9 @@ class Settings(BaseSettings):
         env="SEARCH_URL",
     )
     resume_profile: str = Field("", env="RESUME_PROFILE")
+    resume_profile_url: Optional[str] = Field(
+        "https://blog.242500.xyz", env="RESUME_PROFILE_URL"
+    )
     openai_api_key: Optional[str] = Field(None, env="OPENAI_API_KEY")
     claude_api_key: Optional[str] = Field(None, env="CLAUDE_API_KEY")
     anthropic_api_url: Optional[str] = Field(None, env="ANTHROPIC_API_URL")
@@ -31,6 +35,8 @@ class Settings(BaseSettings):
         env_file = ".env"
         env_file_encoding = "utf-8"
 
+    _cached_resume: Optional[str] = None
+
     def get_api_key(self) -> str:
         if self.model_provider == ModelProvider.ANTHROPIC:
             if not self.claude_api_key:
@@ -39,6 +45,26 @@ class Settings(BaseSettings):
         if not self.openai_api_key:
             raise ValueError("OPENAI_API_KEY is not set")
         return self.openai_api_key
+
+    def load_resume_profile(self) -> str:
+        if self._cached_resume:
+            return self._cached_resume
+
+        if self.resume_profile.strip():
+            self._cached_resume = self.resume_profile.strip()
+            return self._cached_resume
+
+        resume_text = ""
+        if self.resume_profile_url:
+            try:
+                response = httpx.get(self.resume_profile_url, timeout=10)
+                response.raise_for_status()
+                resume_text = response.text
+            except Exception:
+                resume_text = ""
+
+        self._cached_resume = resume_text.strip()
+        return self._cached_resume
 
 
 settings = Settings()

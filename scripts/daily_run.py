@@ -31,12 +31,13 @@ async def _save_jobs(session: Session, jobs: List[JobCreate]) -> List[Job]:
 
 def _evaluate_jobs(session: Session, jobs: List[Job]) -> List[JobEval]:
     evaluations: List[JobEval] = []
+    resume_profile = settings.load_resume_profile()
     for job in jobs:
         existing_eval = session.exec(select(JobEval).where(JobEval.job_id == job.id)).first()
         if existing_eval:
             evaluations.append(existing_eval)
             continue
-        evaluation = evaluate_job(job, settings.resume_profile, settings.get_api_key())
+        evaluation = evaluate_job(job, resume_profile, settings.get_api_key())
         evaluation.job_id = job.id
         session.add(evaluation)
         session.commit()

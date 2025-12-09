@@ -51,7 +51,7 @@ async def evaluate_single(job_id: int, session: Session = Depends(get_session)) 
     job = session.get(Job, job_id)
     if not job:
         raise HTTPException(status_code=404, detail="Job not found")
-    evaluation = evaluate_job(job, settings.resume_profile, settings.get_api_key())
+    evaluation = evaluate_job(job, settings.load_resume_profile(), settings.get_api_key())
     evaluation.job_id = job_id
     session.add(evaluation)
     session.commit()
