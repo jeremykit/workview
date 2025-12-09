@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Optional
 
 import httpx
-from pydantic import BaseSettings, Field
+from pydantic import BaseSettings, Field, PrivateAttr
 
 
 class ModelProvider(str, Enum):
@@ -35,7 +35,7 @@ class Settings(BaseSettings):
         env_file = ".env"
         env_file_encoding = "utf-8"
 
-    _cached_resume: Optional[str] = None
+    _cached_resume: Optional[str] = PrivateAttr(default=None)
 
     def get_api_key(self) -> str:
         if self.model_provider == ModelProvider.ANTHROPIC:
