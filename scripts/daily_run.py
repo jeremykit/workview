@@ -40,7 +40,7 @@ async def _save_jobs(session: Session, jobs: List[JobCreate]) -> List[Job]:
     return saved
 
 
-def _evaluate_jobs(session: Session, jobs: List[Job]) -> List[JobEval]:
+def _evaluate_jobs(session: Session, jobs: List[Job], api_key: str | None) -> List[JobEval]:
     evaluations: List[JobEval] = []
     resume_profile = settings.load_resume_profile()
     for job in jobs:
@@ -49,7 +49,9 @@ def _evaluate_jobs(session: Session, jobs: List[Job]) -> List[JobEval]:
             evaluations.append(existing_eval)
             continue
         try:
-            evaluation = evaluate_job(job, resume_profile, settings.get_api_key())
+            if api_key is None:
+                raise ValueError("OPENAI_API_KEY is not set")
+            evaluation = evaluate_job(job, resume_profile, api_key)
         except Exception as exc:  # noqa: BLE001
             logger.exception("Failed to evaluate job %s (%s)", job.title, job.id)
             evaluation = JobEval(
@@ -73,9 +75,15 @@ def _evaluate_jobs(session: Session, jobs: List[Job]) -> List[JobEval]:
 async def run_daily_pipeline() -> None:
     init_db()
     jobs = await collect_jobs(settings.search_url, settings.max_jobs)
-    with Session(engine) as session:
+    try:
+        api_key = settings.get_api_key()
+    except Exception as exc:  # noqa: BLE001
+        logger.exception("API key unavailable: %s", exc)
+        api_key = None
+
+    with Session(engine, expire_on_commit=False) as session:
         stored_jobs = await _save_jobs(session, jobs)
-        evaluations = _evaluate_jobs(session, stored_jobs)
+        evaluations = _evaluate_jobs(session, stored_jobs, api_key)
     generate_daily_report(stored_jobs, evaluations, settings.output_dir)
     if settings.notion_api_key and settings.notion_database_id:
         created_pages = await push_jobs_to_notion(
