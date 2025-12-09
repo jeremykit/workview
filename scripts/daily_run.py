@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 import sys
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import List
 
@@ -21,6 +22,9 @@ from app.utils.notion import push_jobs_to_notion
 from app.utils.report import generate_daily_report
 
 
+logger = logging.getLogger(__name__)
+
+
 async def _save_jobs(session: Session, jobs: List[JobCreate]) -> List[Job]:
     saved: List[Job] = []
     for job_data in jobs:
@@ -28,7 +32,7 @@ async def _save_jobs(session: Session, jobs: List[JobCreate]) -> List[Job]:
         if existing:
             saved.append(existing)
             continue
-        job = Job(**job_data.dict())
+        job = Job(**job_data.model_dump())
         session.add(job)
         session.commit()
         session.refresh(job)
@@ -36,15 +40,45 @@ async def _save_jobs(session: Session, jobs: List[JobCreate]) -> List[Job]:
     return saved
 
 
-def _evaluate_jobs(session: Session, jobs: List[Job]) -> List[JobEval]:
+def _evaluate_jobs(session: Session, jobs: List[Job], api_key: str | None) -> List[JobEval]:
     evaluations: List[JobEval] = []
     resume_profile = settings.load_resume_profile()
+    if api_key is None:
+        logger.warning(
+            "API key is unavailable; creating fallback evaluations for %d jobs",
+            len(jobs),
+        )
     for job in jobs:
         existing_eval = session.exec(select(JobEval).where(JobEval.job_id == job.id)).first()
         if existing_eval:
             evaluations.append(existing_eval)
             continue
-        evaluation = evaluate_job(job, resume_profile, settings.get_api_key())
+        if api_key is None:
+            evaluation = JobEval(
+                job_id=job.id,
+                match_score=0,
+                tech_match="评估失败：缺少模型 API 密钥",
+                experience_match="OPENAI_API_KEY is not set",
+                pros=[],
+                cons=[],
+                recommend=False,
+                greeting_messages=[],
+            )
+        else:
+            try:
+                evaluation = evaluate_job(job, resume_profile, api_key)
+            except Exception as exc:  # noqa: BLE001
+                logger.exception("Failed to evaluate job %s (%s)", job.title, job.id)
+                evaluation = JobEval(
+                    job_id=job.id,
+                    match_score=0,
+                    tech_match="评估失败：模型调用异常",
+                    experience_match=str(exc),
+                    pros=[],
+                    cons=[],
+                    recommend=False,
+                    greeting_messages=[],
+                )
         evaluation.job_id = job.id
         session.add(evaluation)
         session.commit()
@@ -56,9 +90,15 @@ def _evaluate_jobs(session: Session, jobs: List[Job]) -> List[JobEval]:
 async def run_daily_pipeline() -> None:
     init_db()
     jobs = await collect_jobs(settings.search_url, settings.max_jobs)
-    with Session(engine) as session:
+    try:
+        api_key = settings.get_api_key()
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("API key unavailable: %s", exc)
+        api_key = None
+
+    with Session(engine, expire_on_commit=False) as session:
         stored_jobs = await _save_jobs(session, jobs)
-        evaluations = _evaluate_jobs(session, stored_jobs)
+        evaluations = _evaluate_jobs(session, stored_jobs, api_key)
     generate_daily_report(stored_jobs, evaluations, settings.output_dir)
     if settings.notion_api_key and settings.notion_database_id:
         created_pages = await push_jobs_to_notion(
@@ -68,7 +108,8 @@ async def run_daily_pipeline() -> None:
             settings.notion_database_id,
         )
         print(f"Pushed {len(created_pages)} jobs to Notion database")
-    print(f"Daily pipeline completed at {datetime.utcnow().isoformat()} with {len(jobs)} jobs")
+    finished_at = datetime.now(timezone.utc).isoformat()
+    print(f"Daily pipeline completed at {finished_at} with {len(jobs)} jobs")
 
 
 if __name__ == "__main__":
