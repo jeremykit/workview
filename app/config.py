@@ -15,7 +15,7 @@ class ModelProvider(str, Enum):
 
 class Settings(BaseSettings):
     search_url: str = Field(
-        "https://www.zhipin.com/web/geek/job?query=Python&city=101010100",
+        "https://www.zhipin.com/web/geek/jobs?city=101200100&jobType=1901&salary=406&experience=107&degree=203&scale=303&query=java",
         env="SEARCH_URL",
     )
     resume_profile: str = Field("", env="RESUME_PROFILE")
