@@ -1,13 +1,16 @@
 from __future__ import annotations
 
 """
-Placeholder selectors for BOSS 直聘页面。根据实际页面结构可以调整。
+BOSS 直聘页面选择器（基于 2024-12 实际页面结构）
 """
 
-LIST_ITEM_SELECTOR = "div.job-card-wrapper"
-TITLE_SELECTOR = "span.job-name"
-COMPANY_SELECTOR = "div.company-name"
-SALARY_SELECTOR = "span.salary"
-CITY_SELECTOR = "span.workplace"
-DETAIL_LINK_SELECTOR = "a.card-link"
+# 列表页选择器
+LIST_ITEM_SELECTOR = "li.job-card-box"
+TITLE_SELECTOR = "a.job-name"
+COMPANY_SELECTOR = "span.boss-name"
+SALARY_SELECTOR = "span.job-salary"
+CITY_SELECTOR = "span.company-location"
+DETAIL_LINK_SELECTOR = "a.job-name"  # href 即详情链接
+
+# 详情页选择器（需验证）
 JD_FULL_SELECTOR = "div.job-sec-text"
