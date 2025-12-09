@@ -17,6 +17,7 @@ from app.browser.collect_jobs import collect_jobs
 from app.config import settings
 from app.db.database import engine, init_db
 from app.db.models import Job, JobCreate, JobEval
+from app.utils.notion import push_jobs_to_notion
 from app.utils.report import generate_daily_report
 
 
@@ -59,6 +60,14 @@ async def run_daily_pipeline() -> None:
         stored_jobs = await _save_jobs(session, jobs)
         evaluations = _evaluate_jobs(session, stored_jobs)
     generate_daily_report(stored_jobs, evaluations, settings.output_dir)
+    if settings.notion_api_key and settings.notion_database_id:
+        created_pages = await push_jobs_to_notion(
+            stored_jobs,
+            evaluations,
+            settings.notion_api_key,
+            settings.notion_database_id,
+        )
+        print(f"Pushed {len(created_pages)} jobs to Notion database")
     print(f"Daily pipeline completed at {datetime.utcnow().isoformat()} with {len(jobs)} jobs")
 
 

@@ -11,6 +11,7 @@
 - FastAPI API 供 n8n / GitHub Actions 调用。
 - `scripts/daily_run.py` 一键执行抓取 → 评估 → 生成 `output/daily_report.md`。
 - GitHub Actions `cron` 每天自动运行并上传日报 artifacts。
+- 可选：将匹配岗位同步到 Notion 数据库，方便在个人知识库集中管理。
 
 ## 快速开始
 
@@ -51,6 +52,7 @@ cp .env.example .env
 - `MODEL_PROVIDER`：`OPENAI` 或 `ANTHROPIC`。
 - `ANTHROPIC_API_URL`：可选，Claude 代理/自建网关地址（例如 `https://anyrouter.top`）。
 - `MAX_JOBS`：每日抓取前 N 条。
+- `NOTION_API_KEY` / `NOTION_DATABASE_ID`：可选，配置后会将 Top 匹配岗位写入 Notion 数据库。
 
 ### 4. 初始化数据库并本地运行 API
 
@@ -92,15 +94,33 @@ sqlite> SELECT title, match_score FROM job JOIN jobeval ON job.id = jobeval.job_
 - `RESUME_PROFILE`
 - `RESUME_PROFILE_URL`（可选，填写你的在线简历地址，例如 <https://blog.242500.xyz>）
 - `SEARCH_URL`
+- `NOTION_API_KEY`（可选，用于同步 Notion）
+- `NOTION_DATABASE_ID`（可选，用于同步 Notion）
 
 Workflow 每天北京时间 09:00 运行，执行 `python scripts/daily_run.py` 并上传 `output/daily_report.md` 为 artifacts。
 
-### 8. 整体流程
+### 8. 可选：同步到 Notion
+
+1. 在 Notion 中创建一个 Database（表格视图），确认至少有以下字段（名称区分大小写）：
+   - `Name`：Title 类型。
+   - `Company`：Rich text。
+   - `City`：Rich text。
+   - `Salary`：Rich text。
+   - `Detail URL`：URL 类型。
+   - `Match Score`：Number 类型。
+   - `Recommend`：Checkbox。
+   - `Greeting`：Rich text（用于两条打招呼文案拼接）。
+2. 创建 Notion Integration，获取 `Internal Integration Token`，并在数据库页面将该集成加入共享。
+3. 在 `.env` 或 GitHub Secrets 中填写 `NOTION_API_KEY` 与 `NOTION_DATABASE_ID`（数据库页面 URL 中的 ID）。
+4. 运行 `python scripts/daily_run.py`，完成抓取+评估后会自动把 Top10 岗位写入 Notion。
+
+### 9. 整体流程
 
 1. Playwright 使用 `storage_state.json` 登录状态抓取职位卡片及 JD。
 2. AI (OpenAI/Claude) 评估匹配度，生成打招呼话术。
 3. SQLModel 写入 `jobs` 和 `job_eval` 表。
 4. 生成 `output/daily_report.md`（Top10 推荐+关键字段+打招呼+JD 摘要）。
+5. （可选）将 Top10 岗位推送到 Notion 数据库，便于在知识库持续跟进。
 
 > 提示：`RESUME_PROFILE` 为空时，流程会自动抓取 `RESUME_PROFILE_URL`（默认为 <https://blog.242500.xyz>）的网页内容作为简历来源，确保 Boss 过滤与 AI 评估都紧贴你的真实项目和经验。
 

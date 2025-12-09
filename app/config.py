@@ -30,6 +30,8 @@ class Settings(BaseSettings):
     storage_state_path: Path = Field(Path("storage_state.json"), env="STORAGE_STATE_PATH")
     output_dir: Path = Field(Path("output"), env="OUTPUT_DIR")
     max_jobs: int = Field(20, env="MAX_JOBS")
+    notion_api_key: Optional[str] = Field(None, env="NOTION_API_KEY")
+    notion_database_id: Optional[str] = Field(None, env="NOTION_DATABASE_ID")
 
     class Config:
         env_file = ".env"
