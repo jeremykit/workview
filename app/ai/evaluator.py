@@ -41,7 +41,7 @@ def evaluate_job(job: Job, resume_profile: str, api_key: str, provider: ModelPro
     prompt = _build_prompt(job, resume_profile)
 
     if provider_to_use == ModelProvider.ANTHROPIC:
-        client = Anthropic(api_key=api_key)
+        client = Anthropic(api_key=api_key, base_url=settings.anthropic_api_url)
         message = client.messages.create(
             model="claude-3-5-sonnet-20240620",
             max_tokens=800,

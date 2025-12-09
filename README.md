@@ -47,6 +47,7 @@ cp .env.example .env
 - `RESUME_PROFILE`：你的简历摘要，提供给 LLM 参考。
 - `OPENAI_API_KEY` / `CLAUDE_API_KEY`：AI 服务 key，按 `MODEL_PROVIDER` 选择。
 - `MODEL_PROVIDER`：`OPENAI` 或 `ANTHROPIC`。
+- `ANTHROPIC_API_URL`：可选，Claude 代理/自建网关地址（例如 `https://anyrouter.top`）。
 - `MAX_JOBS`：每日抓取前 N 条。
 
 ### 4. 初始化数据库并本地运行 API
@@ -85,6 +86,7 @@ sqlite> SELECT title, match_score FROM job JOIN jobeval ON job.id = jobeval.job_
 
 - `OPENAI_API_KEY`
 - `CLAUDE_API_KEY`
+- `ANTHROPIC_API_URL`（如使用代理）
 - `RESUME_PROFILE`
 - `SEARCH_URL`
 

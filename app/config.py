@@ -20,6 +20,7 @@ class Settings(BaseSettings):
     resume_profile: str = Field("", env="RESUME_PROFILE")
     openai_api_key: Optional[str] = Field(None, env="OPENAI_API_KEY")
     claude_api_key: Optional[str] = Field(None, env="CLAUDE_API_KEY")
+    anthropic_api_url: Optional[str] = Field(None, env="ANTHROPIC_API_URL")
     model_provider: ModelProvider = Field(ModelProvider.OPENAI, env="MODEL_PROVIDER")
     database_url: str = Field("sqlite:///./data/jobs.db", env="DATABASE_URL")
     storage_state_path: Path = Field(Path("storage_state.json"), env="STORAGE_STATE_PATH")

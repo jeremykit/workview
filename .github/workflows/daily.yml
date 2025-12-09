@@ -27,6 +27,7 @@ jobs:
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           CLAUDE_API_KEY: ${{ secrets.CLAUDE_API_KEY }}
+          ANTHROPIC_API_URL: ${{ secrets.ANTHROPIC_API_URL }}
           RESUME_PROFILE: ${{ secrets.RESUME_PROFILE }}
           SEARCH_URL: ${{ secrets.SEARCH_URL }}
         run: |
