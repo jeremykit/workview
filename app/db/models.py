@@ -1,7 +1,5 @@
-from __future__ import annotations
-
 from datetime import datetime
-from typing import Optional
+from typing import List, Optional
 
 from sqlalchemy import JSON, Column
 from sqlmodel import Field, Relationship, SQLModel
@@ -19,7 +17,7 @@ class JobBase(SQLModel):
 
 class Job(JobBase, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
-    evaluations: list["JobEval"] = Relationship(back_populates="job")
+    evaluations: List["JobEval"] = Relationship(back_populates="job")
 
 
 class JobCreate(JobBase):
@@ -40,7 +38,7 @@ class JobEvalBase(SQLModel):
 class JobEval(JobEvalBase, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     job_id: Optional[int] = Field(default=None, foreign_key="job.id")
-    job: Optional[Job] = Relationship(back_populates="evaluations")
+    job: Optional["Job"] = Relationship(back_populates="evaluations")
 
 
 class JobEvalCreate(JobEvalBase):

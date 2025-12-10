@@ -32,6 +32,7 @@ class Settings(BaseSettings):
     max_jobs: int = Field(20, env="MAX_JOBS")
     notion_api_key: Optional[str] = Field(None, env="NOTION_API_KEY")
     notion_database_id: Optional[str] = Field(None, env="NOTION_DATABASE_ID")
+    headless_browser: bool = Field(True, env="HEADLESS_BROWSER")
 
     class Config:
         env_file = ".env"

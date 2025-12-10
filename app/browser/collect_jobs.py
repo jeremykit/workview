@@ -37,9 +37,10 @@ async def collect_jobs(search_url: str, max_count: int | None = None) -> List[Jo
     logger.info(f"开始爬取职位，目标 URL: {search_url}，最大数量: {max_items}")
 
     async with async_playwright() as p:
-        logger.info(f"启动浏览器")
+        logger.info("启动浏览器")
+        logger.info("  运行模式: %s", "headless" if settings.headless_browser else "headed")
         browser = await p.chromium.launch(
-            headless=False,  # 改为有头模式，更难被检测
+            headless=settings.headless_browser,
             args=[
                 '--disable-blink-features=AutomationControlled',
                 '--disable-infobars',
