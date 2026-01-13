@@ -1,8 +1,6 @@
 name: Daily Job Crawl
 
 on:
-  schedule:
-    - cron: "0 1 * * *"  # 09:00 Beijing Time
   workflow_dispatch:
 
 jobs:
